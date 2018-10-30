@@ -13,7 +13,7 @@ if ( ! defined( 'WP_USE_THEMES' ) ) {
 	global $isapage;
 	$isapage = true;
 	define( 'WP_USE_THEMES', false );
-	require_once( dirname( __FILE__ ) . '/../../../../wp-load.php' );
+	require_once dirname( __FILE__ ) . '/../../../../wp-load.php';
 }
 
 // Bail if PMPro or the PayFast add on is not active
@@ -34,7 +34,7 @@ $pfFeatures = 'PHP ' . phpversion() . ';';
 // - cURL
 if ( in_array( 'curl', get_loaded_extensions() ) ) {
 	define( 'PF_CURL', '' );
-	$pfVersion = curl_version();
+	$pfVersion   = curl_version();
 	$pfFeatures .= ' curl ' . $pfVersion['version'] . ';';
 } else {
 		$pfFeatures .= ' nocurl;';
@@ -67,7 +67,8 @@ define( 'PF_ERR_UNKNOWN', __( 'Unkown error occurred', 'pmpro-payfast' ) );
 define( 'PF_MSG_OK', __( 'Payment was successful', 'pmpro-payfast' ) );
 define( 'PF_MSG_FAILED', __( 'Payment has failed', 'pmpro-payfast' ) );
 define(
-	'PF_MSG_PENDING', __( 'pmpro-payfast' ),
+	'PF_MSG_PENDING',
+	__( 'pmpro-payfast' ),
 	__( 'The payment is pending. Please note, you will receive another Instant', 'pmpro-payfast' ) .
 	__( ' Transaction Notification when the payment status changes to', 'pmpro-payfast' ) .
 	__( ' "Completed", or "Failed"', 'pmpro-payfast' )
@@ -78,12 +79,12 @@ define( 'PMPRO_IPN_DEBUG', 'log' ); // this is called inside wp-config rather.
 global $wpdb, $gateway_environment, $logstr;
 $logstr = '';   // will put debug info here and write to ipnlog.txt
 // Variable Initialization
-$pfError = false;
-$pfErrMsg = '';
-$pfDone = false;
-$pfData = array();
-$pfHost = ( ( $gateway_environment == 'sandbox' ) ? 'sandbox' : 'www' ) . '.payfast.co.za';
-$pfOrderId = '';
+$pfError       = false;
+$pfErrMsg      = '';
+$pfDone        = false;
+$pfData        = array();
+$pfHost        = ( ( $gateway_environment == 'sandbox' ) ? 'sandbox' : 'www' ) . '.payfast.co.za';
+$pfOrderId     = '';
 $pfParamString = '';
 ipnlog( __( 'PayFast ITN call received', 'pmpro-payfast' ) );
 
@@ -104,7 +105,7 @@ if ( ! $pfError && ! $pfDone ) {
 
 	ipnlog( __( 'PayFast Data: ', 'pmpro-payfast' ) . print_r( $pfData, true ) );
 	if ( $pfData === false ) {
-		$pfError = true;
+		$pfError  = true;
 		$pfErrMsg = PF_ERR_BAD_ACCESS;
 	}
 }
@@ -112,11 +113,11 @@ if ( ! $pfError && ! $pfDone ) {
 // Verify security signature
 if ( ! $pfError && ! $pfDone ) {
 	ipnlog( __( 'Verify security signature', 'pmpro-payfast' ) );
-	$passPhrase = pmpro_getOption( 'payfast_passphrase' );
+	$passPhrase   = pmpro_getOption( 'payfast_passphrase' );
 	$pfPassPhrase = empty( $passPhrase ) ? null : $passPhrase;
 	// If signature different, log for debugging
 	if ( ! pmpro_pfValidSignature( $pfData, $pfParamString, $pfPassPhrase ) ) {
-		$pfError = true;
+		$pfError  = true;
 		$pfErrMsg = PF_ERR_INVALID_SIGNATURE;
 	}
 }
@@ -124,7 +125,7 @@ if ( ! $pfError && ! $pfDone ) {
 if ( ! $pfError && ! $pfDone && ! PF_DEBUG ) {
 	ipnlog( __( 'Verify source IP', 'pmpro-payfast' ) );
 	if ( ! pmpro_pfValidIP( $_SERVER['REMOTE_ADDR'] ) ) {
-		$pfError = true;
+		$pfError  = true;
 		$pfErrMsg = PF_ERR_BAD_SOURCE_IP;
 	}
 }
@@ -133,7 +134,7 @@ if ( ! $pfError ) {
 	ipnlog( __( 'Verify data received', 'pmpro-payfast' ) );
 	$pfValid = pmpro_pfValidData( $pfHost, $pfParamString );
 	if ( ! $pfValid ) {
-		$pfError = true;
+		$pfError  = true;
 		$pfErrMsg = PF_ERR_BAD_ACCESS;
 	}
 }
@@ -144,7 +145,7 @@ if ( ! $pfError && ! $pfDone && $pfData['payment_status'] == 'COMPLETE' ) {
 	if ( empty( $pfData['token'] ) || strtotime( $pfData['custom_str1'] ) > strtotime( gmdate( 'Y-m-d', current_time( 'timestamp' ) ) . '- 2 days' ) ) {
 		if ( ! pmpro_pfAmountsEqual( $pfData['amount_gross'], $morder->total ) ) {
 			ipnlog( __( 'Amount Returned: ', 'pmpro-payfast' ) . $pfData['amount_gross'] . __( "\n Amount in Cart:", 'pmpro-payfast' ) . $checkTotal );
-			$pfError = true;
+			$pfError  = true;
 			$pfErrMsg = PF_ERR_AMOUNT_MISMATCH;
 		}
 	}
@@ -153,7 +154,7 @@ if ( ! $pfError && ! $pfDone && $pfData['payment_status'] == 'COMPLETE' ) {
 // Check status and update order
 if ( ! $pfError && ! $pfDone ) {
 	if ( $pfData['payment_status'] == 'COMPLETE' && ! empty( $pfData['token'] ) ) {
-		$txn_id = $pfData['m_payment_id'];
+		$txn_id    = $pfData['m_payment_id'];
 		$subscr_id = $pfData['token'];
 		// custom_str1 is the date of the initial order in gmt
 		if ( strtotime( $pfData['custom_str1'] ) > strtotime( gmdate( 'Y-m-d', current_time( 'timestamp' ) ) . '- 2 days' ) ) {
@@ -162,7 +163,7 @@ if ( ! $pfError && ! $pfDone ) {
 			$amount = $pfData['amount_gross'];
 
 			// trial, get the order
-			$morder = new MemberOrder( $pfData['m_payment_id'] );
+			$morder               = new MemberOrder( $pfData['m_payment_id'] );
 			$morder->paypal_token = $pfData['token'];
 			$morder->getMembershipLevel();
 			$morder->getUser();
@@ -248,7 +249,7 @@ if ( $pfData['payment_status'] == 'CANCELLED' ) {
 
 ipnlog( __( 'Check status and update order', 'pmpro-payfast' ) );
 $transaction_id = $pfData['pf_payment_id'];
-$morder = new MemberOrder( $pfData['m_payment_id'] );
+$morder         = new MemberOrder( $pfData['m_payment_id'] );
 $morder->getMembershipLevel();
 $morder->getUser();
 ipnlog( __( 'check token', 'pmpro-payfast' ) );
@@ -279,7 +280,6 @@ switch ( $pfData['payment_status'] ) {
 	// }
 	// If an error occurred
 if ( $pfError ) {
-
 	ipnlog( __( 'Error occurred: ', 'pmpro-payfast' ) . $pfErrMsg );
 }
 
@@ -338,18 +338,18 @@ function pmpro_itnChangeMembershipLevel( $txn_id, &$morder ) {
 	$startdate = apply_filters( 'pmpro_checkout_start_date', "'" . current_time( 'mysql' ) . "'", $morder->user_id, $morder->membership_level );
 	// custom level to change user to
 	$custom_level = array(
-		'user_id' => $morder->user_id,
-		'membership_id' => $morder->membership_level->id,
-		'code_id' => $discount_code_id,
+		'user_id'         => $morder->user_id,
+		'membership_id'   => $morder->membership_level->id,
+		'code_id'         => $discount_code_id,
 		'initial_payment' => $morder->membership_level->initial_payment,
-		'billing_amount' => $morder->membership_level->billing_amount,
-		'cycle_number' => $morder->membership_level->cycle_number,
-		'cycle_period' => $morder->membership_level->cycle_period,
-		'billing_limit' => $morder->membership_level->billing_limit,
-		'trial_amount' => $morder->membership_level->trial_amount,
-		'trial_limit' => $morder->membership_level->trial_limit,
-		'startdate' => $startdate,
-		'enddate' => $enddate,
+		'billing_amount'  => $morder->membership_level->billing_amount,
+		'cycle_number'    => $morder->membership_level->cycle_number,
+		'cycle_period'    => $morder->membership_level->cycle_period,
+		'billing_limit'   => $morder->membership_level->billing_limit,
+		'trial_amount'    => $morder->membership_level->trial_amount,
+		'trial_limit'     => $morder->membership_level->trial_limit,
+		'startdate'       => $startdate,
+		'enddate'         => $enddate,
 	);
 	global $pmpro_error;
 	if ( ! empty( $pmpro_error ) ) {
@@ -359,7 +359,7 @@ function pmpro_itnChangeMembershipLevel( $txn_id, &$morder ) {
 	// change level and continue "checkout"
 	if ( pmpro_changeMembershipLevel( $custom_level, $morder->user_id ) !== false ) {
 		// update order status and transaction ids
-		$morder->status = 'success';
+		$morder->status                 = 'success';
 		$morder->payment_transaction_id = $txn_id;
 		if ( ! empty( $_POST['token'] ) ) {
 			$morder->subscription_transaction_id = $_POST['m_payment_id'];
@@ -402,7 +402,7 @@ function pmpro_itnChangeMembershipLevel( $txn_id, &$morder ) {
 		} else {
 			$invoice = null;
 		}
-		$user = get_userdata( $morder->user_id );
+		$user                   = get_userdata( $morder->user_id );
 		$user->membership_level = $morder->membership_level;        // make sure they have the right level info
 		// send email to member
 		$pmproemail = new PMProEmail();
@@ -478,14 +478,14 @@ function pmpro_ipnSaveOrder( $txn_id, $last_order ) {
 		// hook for successful subscription payments
 		// do_action("pmpro_subscription_payment_completed");
 		// save order
-		$morder = new MemberOrder();
-		$morder->user_id = $last_order->user_id;
-		$morder->membership_id = $last_order->membership_id;
-		$morder->payment_transaction_id = $txn_id;
+		$morder                              = new MemberOrder();
+		$morder->user_id                     = $last_order->user_id;
+		$morder->membership_id               = $last_order->membership_id;
+		$morder->payment_transaction_id      = $txn_id;
 		$morder->subscription_transaction_id = $last_order->subscription_transaction_id;
-		$morder->gateway = $last_order->gateway;
-		$morder->gateway_environment = $last_order->gateway_environment;
-		$morder->paypal_token = $last_order->paypal_token;
+		$morder->gateway                     = $last_order->gateway;
+		$morder->gateway_environment         = $last_order->gateway_environment;
+		$morder->paypal_token                = $last_order->paypal_token;
 		// Payment Status
 		$morder->status = 'success'; // We have confirmed that and thats the reason we are here.
 		// Payment Type.
@@ -493,32 +493,32 @@ function pmpro_ipnSaveOrder( $txn_id, $last_order ) {
 		// set amount based on which PayPal type
 		if ( $last_order->gateway == 'payfast' ) {
 			$morder->InitialPayment = $_POST['amount_gross'];    // not the initial payment, but the class is expecting that
-			$morder->PaymentAmount = $_POST['amount_gross'];
+			$morder->PaymentAmount  = $_POST['amount_gross'];
 		}
 		$morder->FirstName = $_POST['name_first'];
-		$morder->LastName = $_POST['name_last'];
-		$morder->Email = $_POST['email_address'];
+		$morder->LastName  = $_POST['name_last'];
+		$morder->Email     = $_POST['email_address'];
 		// get address info if appropriate
 		if ( $last_order->gateway == 'payfast' ) {
-			$morder->Address1 = get_user_meta( $last_order->user_id, 'pmpro_baddress1', true );
-			$morder->City = get_user_meta( $last_order->user_id, 'pmpro_bcity', true );
-			$morder->State = get_user_meta( $last_order->user_id, 'pmpro_bstate', true );
-			$morder->CountryCode = 'ZA';
-			$morder->Zip = get_user_meta( $last_order->user_id, 'pmpro_bzip', true );
-			$morder->PhoneNumber = get_user_meta( $last_order->user_id, 'pmpro_bphone', true );
-			$morder->billing->name = $_POST['name_first'] . ' ' . $_POST['name_last'];
-			$morder->billing->street = get_user_meta( $last_order->user_id, 'pmpro_baddress1', true );
-			$morder->billing->city = get_user_meta( $last_order->user_id, 'pmpro_bcity', true );
-			$morder->billing->state = get_user_meta( $last_order->user_id, 'pmpro_bstate', true );
-			$morder->billing->zip = get_user_meta( $last_order->user_id, 'pmpro_bzip', true );
+			$morder->Address1         = get_user_meta( $last_order->user_id, 'pmpro_baddress1', true );
+			$morder->City             = get_user_meta( $last_order->user_id, 'pmpro_bcity', true );
+			$morder->State            = get_user_meta( $last_order->user_id, 'pmpro_bstate', true );
+			$morder->CountryCode      = 'ZA';
+			$morder->Zip              = get_user_meta( $last_order->user_id, 'pmpro_bzip', true );
+			$morder->PhoneNumber      = get_user_meta( $last_order->user_id, 'pmpro_bphone', true );
+			$morder->billing->name    = $_POST['name_first'] . ' ' . $_POST['name_last'];
+			$morder->billing->street  = get_user_meta( $last_order->user_id, 'pmpro_baddress1', true );
+			$morder->billing->city    = get_user_meta( $last_order->user_id, 'pmpro_bcity', true );
+			$morder->billing->state   = get_user_meta( $last_order->user_id, 'pmpro_bstate', true );
+			$morder->billing->zip     = get_user_meta( $last_order->user_id, 'pmpro_bzip', true );
 			$morder->billing->country = get_user_meta( $last_order->user_id, 'pmpro_bcountry', true );
-			$morder->billing->phone = get_user_meta( $last_order->user_id, 'pmpro_bphone', true );
+			$morder->billing->phone   = get_user_meta( $last_order->user_id, 'pmpro_bphone', true );
 			// get CC info that is on file
-			$morder->cardtype = get_user_meta( $last_order->user_id, 'pmpro_CardType', true );
-			$morder->accountnumber = hideCardNumber( get_user_meta( $last_order->user_id, 'pmpro_AccountNumber', true ), false );
-			$morder->expirationmonth = get_user_meta( $last_order->user_id, 'pmpro_ExpirationMonth', true );
-			$morder->expirationyear = get_user_meta( $last_order->user_id, 'pmpro_ExpirationYear', true );
-			$morder->ExpirationDate = $morder->expirationmonth . $morder->expirationyear;
+			$morder->cardtype              = get_user_meta( $last_order->user_id, 'pmpro_CardType', true );
+			$morder->accountnumber         = hideCardNumber( get_user_meta( $last_order->user_id, 'pmpro_AccountNumber', true ), false );
+			$morder->expirationmonth       = get_user_meta( $last_order->user_id, 'pmpro_ExpirationMonth', true );
+			$morder->expirationyear        = get_user_meta( $last_order->user_id, 'pmpro_ExpirationYear', true );
+			$morder->ExpirationDate        = $morder->expirationmonth . $morder->expirationyear;
 			$morder->ExpirationDate_YdashM = $morder->expirationyear . '-' . $morder->expirationmonth;
 		}
 		// figure out timestamp or default to none (today)
@@ -583,7 +583,7 @@ function pmpro_pfValidSignature( $pfData = null, &$pfParamString = null, $passPh
 		$tempParamString = $pfParamString . '&passphrase=' . urlencode( trim( $passPhrase ) );
 	}
 	$signature = md5( $tempParamString );
-	$result = ( $pfData['signature'] == $signature );
+	$result    = ( $pfData['signature'] == $signature );
 	ipnlog( __( 'Signature Sent: ', 'pmpro-payfast' ) . $signature );
 	ipnlog( __( 'Signature = ', 'pmpro-payfast' ) . ( $result ? __( 'valid', 'pmpro-payfast' ) : __( 'invalid', 'pmpro-payfast' ) ) );
 	return( $result );
@@ -629,11 +629,11 @@ function pmpro_pfValidData( $pfHost = 'www.payfast.co.za', $pfParamString = '', 
 	// Use fsockopen
 	else {
 		// Variable initialization
-		$header = '';
-		$res = '';
+		$header     = '';
+		$res        = '';
 		$headerDone = false;
 		// Construct Header
-		$header = "POST /eng/query/validate HTTP/1.0\r\n";
+		$header  = "POST /eng/query/validate HTTP/1.0\r\n";
 		$header .= 'Host: ' . $pfHost . "\r\n";
 		$header .= 'User-Agent: ' . PF_USER_AGENT . "\r\n";
 		$header .= "Content-Type: application/x-www-form-urlencoded\r\n";
@@ -651,7 +651,7 @@ function pmpro_pfValidData( $pfHost = 'www.payfast.co.za', $pfParamString = '', 
 				$headerDone = true;
 			}
 			// If header has been processed
-			else if ( $headerDone ) {
+			elseif ( $headerDone ) {
 				// Read the main response
 				$response .= $line;
 			}
@@ -660,7 +660,7 @@ function pmpro_pfValidData( $pfHost = 'www.payfast.co.za', $pfParamString = '', 
 	}
 	ipnlog( "Response:\n" . print_r( $response, true ) );
 	// Interpret Response
-	$lines = explode( "\r\n", $response );
+	$lines        = explode( "\r\n", $response );
 	$verifyResult = trim( $lines[0] );
 	if ( strcasecmp( $verifyResult, 'VALID' ) == 0 ) {
 		return( true );
@@ -683,7 +683,7 @@ function pmpro_pfValidIP( $sourceIP ) {
 		'w1w.payfast.co.za',
 		'w2w.payfast.co.za',
 	);
-	$validIps = array();
+	$validIps   = array();
 	foreach ( $validHosts as $pfHostname ) {
 		$ips = gethostbynamel( $pfHostname );
 		if ( $ips !== false ) {
